@@ -1,0 +1,331 @@
+<html>
+<head>
+</head>
+<body>
+Local Video
+<div id="localVideos"></div>
+<button onclick="window.publish()">Publish</button><br />
+
+
+Remote Video<br />
+<div id="remoteVideos"></div>
+<br />
+
+Logs<br />
+<div id="logs"></div>
+
+<script>
+    function uuid() {
+        var uuid = "", i, random;
+        for (i = 0; i < 32; i++) {
+            random = Math.random() * 16 | 0;
+
+            if (i == 8 || i == 12 || i == 16 || i == 20) {
+                uuid += "-"
+            }
+            uuid += (i == 12 ? 4 : (i == 16 ? (random & 3 | 8) : random)).toString(16);
+        }
+        return uuid;
+    }
+    function log(msg) {
+        document.getElementById("logs").innerHTML += msg + '<br>'
+    }
+    let config = {
+        iceServers: [{
+            urls: 'stun:stun.l.google.com:19302'
+        }]
+    }
+
+    let socket = new WebSocket("ws://localhost:8080");
+    let pcPub = new RTCPeerConnection(config)
+    let pcSub = new RTCPeerConnection(config)
+    let id;
+    let peerConnectionOfferAnswerCriteria = {
+  offerToReceiveAudio: true,
+  offerToReceiveVideo: true,
+};
+
+    pcPub.ontrack = function ({track, streams}) {
+        if (track.kind === 'video') {
+            log("got track");
+            track.onunmute = function() {
+                let el = document.createElement(track.kind)
+                el.srcObject = streams[0]
+                el.autoplay = true;
+                document.getElementById("remoteVideos").appendChild(el);
+            }
+        }
+    }
+
+    pcSub.ontrack = function ({track, streams}) {
+        if (track.kind === 'video') {
+            log("got track pc sub");
+            track.onunmute = function() {
+                let el = document.createElement(track.kind)
+                console.log("sub Stream ", streams)
+                el.srcObject = streams[0]
+                el.autoplay = true;
+                document.getElementById("remoteVideos").appendChild(el);
+            }
+        }
+    }
+
+    pcPub.oniceconnectionstatechange = function (e) {
+        log(`ICE connection state: ${pcPub.iceConnectionState}`)
+        const message = {
+            type: "icestate",
+            data: pcPub.iceConnectionState
+        }
+        socket.send(JSON.stringify(message))
+    }
+
+    pcSub.oniceconnectionstatechange = function (e) {
+        log(`ICE connection state: ${pcPub.iceConnectionState}`)
+        const message = {
+            type: "icestate",
+            data: pcPub.iceConnectionState
+        }
+        socket.send(JSON.stringify(message))
+    }
+
+    pcPub.onicecandidate = function (event) {
+        let candidate = event.candidate;
+        if (candidate !== null) {
+            let message = {
+                type: "trickle",
+                data: {
+                    candidate,
+                    target: 0
+                }
+            }
+            socket.send(JSON.stringify(message))
+            console.log("send trickle", message);
+        }
+    }
+
+    pcSub.onicecandidate = function (event) {
+        let candidate = event.candidate;
+        if (candidate !== null) {
+            let message = {
+                type: "trickle",
+                data: {
+                    candidate,
+                    target: 1
+                }
+            }
+            socket.send(JSON.stringify(message))
+            console.log("send trickle", message);
+        }
+    }
+
+    socket.addEventListener("message", async function(event) {
+        let resp = JSON.parse(event.data)
+         console.log("checking", resp);
+        if (!resp.id && resp.type === "offer") {
+            log("got offer notification");
+            console.log("@@@resp.desc", resp.data)
+            await pcSub.setRemoteDescription(resp.data).catch(function(e) {
+                console.log(e);
+            })
+            const answer = await pcSub.createAnswer(peerConnectionOfferAnswerCriteria).catch(function(e) {
+                console.log(e)
+            })
+            console.log("answer", answer)
+            await pcSub.setLocalDescription(answer).catch(function(e) {
+                console.log(e)
+            })
+
+            const id = uuid()
+            log(`Sending answer`)
+            socket.send(JSON.stringify({
+                type: "answer",
+                data: { desc: answer },
+                id
+            }))
+        } else if (resp.type === "trickle") {
+            console.log("trickle recieved!!!! ", resp.data.candidate, "taget@@ ", resp.data.target)
+            // pcPub.addIceCandidate(resp.data.candidate).catch(log);
+            if (resp.data.target === 0) {
+                console.log("set Can pub")
+                pcPub.addIceCandidate(resp.data.candidate).catch(log);
+            }
+
+            if (resp.data.target === 1) {
+                console.log("set Can sub")
+                pcSub.addIceCandidate(resp.data.candidate).catch(log);
+            }
+
+        }
+        //     pc.setRemoteDescription(resp.data).then(function() {
+        //         pc.createAnswer().then(function(e) {
+        //             answer = e;
+        //             console.log("got answer###", answer)
+        //             pc.setLocalDescription(answer).then(function () {
+        //                 id = uuid()
+        //                 log(`Sending answer`)
+        //                 let message = {
+        //                     type: "answer",
+        //                     data: {
+        //                         desc: answer,
+        //                         id
+        //                     },
+        //                 }
+        //                 socket.send(JSON.stringify(message))
+        //                 console.log("answer print", answer)
+        //                 console.log("answer message @@@", message);
+        //             })
+        //         })
+        //     }).catch(function(e) {
+        //         console.log(e);
+        //     })
+        // } else if (resp.type === "trickle") {
+        //     console.log("trickle", resp)
+        //     pc.addIceCandidate(resp.data.candidate).catch(function(e) {
+        //         console.log(e);
+        //     })
+        // }
+    });
+
+    async function join() {
+        const offer = await pcPub.createOffer()
+        await pcPub.setLocalDescription(offer)
+        const id = uuid();
+
+        const message = {
+                        type: "joinRoom",
+                        data: {
+                            sid: "testingroom",
+                            offer: pcPub.localDescription,
+                            id
+                        }
+                    }
+        console.log("join requested", message)
+        socket.send(JSON.stringify(message))
+
+        socket.addEventListener('message', (event) => {
+            const resp = JSON.parse(event.data)
+            if (resp.id === id) {
+                log(`Got publish answer`)
+
+                // Hook this here so it's not called before joining
+                pcSub.onnegotiationneeded = async function () {
+                    log("Renegotiating")
+                    const offer = await pc.createOffer()
+                    await pcSub.setLocalDescription(offer)
+                    const id = uuid()
+                    let message = {
+                        type: "offer",
+                        data: {
+                            desc: offer,
+                            id
+                            }
+                               }
+                    socket.send(JSON.stringify(message))
+                    console.log("@@@@send offer")
+
+                    socket.addEventListener('message', (event) => {
+                        const resp = JSON.parse(event.data)
+                        console.log("response", resp);
+                        if (resp.id === id) {
+                            log(`Got renegotiation answer`)
+                            pcSub.setRemoteDescription(resp.data).catch(function (e) {
+                                console.log(e)
+                            });
+                        }
+                    })
+                }
+                console.log("before error", resp.data)
+                pcPub.setRemoteDescription(resp.data).catch(function(e) {
+                    console.log("error here ", e)
+                })
+            }
+        })
+
+        // pc.createOffer().then(function (offer) {
+        //     pc.setLocalDescription(offer).then(function () {
+        //         id = uuid();
+        //         socket.send(JSON.stringify({
+        //             type: "joinRoom",
+        //             data: {
+        //                 sid: "sample",
+        //                 offer: pc.localDescription,
+        //                 id
+        //             }
+        //         }))
+        //     })
+        // })
+
+        // socket.addEventListener("message", function (event) {
+        //     let resp = JSON.parse(event.data)
+        //     if (resp.type !== "heartPackage") {
+        //         console.log("data =>", resp)
+        //         console.log("id matching server id=>", resp.id, "local id", id );
+        //     }
+        //
+        //     if (resp.id === id) {
+        //         console.log("hello");
+        //         log(`Got publish answer`)
+        //         pc.onnegotiationneeded = function () {
+        //             console.log("create offer11!!!")
+        //             log("Renegotiating");
+        //             pc.createOffer().then(function(offer) {
+        //                 pc.setLocalDescription(offer)
+        //                  id = uuid();
+        //                 console.log("create offer!!!")
+        //                 let message = {
+        //                     type: "offer",
+        //                     data: {
+        //                         desc: offer,
+        //                         id
+        //                     }
+        //                 }
+        //                 socket.send(JSON.stringify(message))
+        //                 console.log("send offer")
+        //             })
+        //             socket.addEventListener('message', (event) => {
+        //                 const resp = JSON.parse(event.data)
+        //                 if (resp.type === "answer") {
+        //                     log(`Got renegotiation answer`)
+        //                     pc.setRemoteDescription(resp.data).catch(function(e) {
+        //                         console.log(e);
+        //                     })
+        //                 }
+        //             })
+        //         }
+        //        // console.log("set local sdp=> ", resp.data.sdp)
+        //         pc.setRemoteDescription(resp.data).catch(function(e) {
+        //             console.log(e)
+        //         })
+        //     }
+        // })
+    }
+
+    let localStream
+    let pid
+    navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true
+    }).then(stream => {
+        let el = document.createElement("Video")
+        el.srcObject = stream
+        el.autoplay = true
+        el.controls = true
+        el.muted = true
+        document.getElementById('localVideos').appendChild(el)
+
+        localStream = stream
+    }).catch(log)
+
+    window.publish = () => {
+        log("Publishing stream")
+        localStream.getTracks().forEach((track) => {
+            pcPub.addTrack(track, localStream);
+        });
+
+        join()
+    }
+</script>
+
+
+</body>
+</html>

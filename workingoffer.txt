@@ -1,0 +1,32 @@
+"v=0
+o=- 7262340211618245425 1608042982 IN IP4 0.0.0.0
+s=-
+t=0 0
+a=fingerprint:sha-256 20:52:8D:FA:E3:53:1D:E8:42:F8:B4:B3:26:30:74:ED:F2:1F:11:95:DF:A7:DD:A5:83:98:48:AF:C6:1E:F4:73
+a=group:BUNDLE 0 1
+m=audio 9 UDP/TLS/RTP/SAVPF 111
+c=IN IP4 0.0.0.0
+a=setup:actpass
+a=mid:0
+a=ice-ufrag:NTHIWARKSsUDtTRG
+a=ice-pwd:otCrldAfPQbKbLmpoHsXnXwZMGgSJjqa
+a=rtcp-mux
+a=rtcp-rsize
+a=rtpmap:111 opus/48000/2
+a=fmtp:111 minptime=10;useinbandfec=1
+a=extmap:1 urn:ietf:params:rtp-hdrext:sdes:mid
+a=ssrc:296555410 cname:YMroQHXltXsOCg0rPArExIwqVSudKE6XlMGe
+a=ssrc:296555410 msid:YMroQHXltXsOCg0rPArExIwqVSudKE6XlMGe 9b1aaa20-42d5-4bd1-a324-3c868fbb5867
+a=ssrc:296555410 mslabel:YMroQHXltXsOCg0rPArExIwqVSudKE6XlMGe
+a=ssrc:296555410 label:9b1aaa20-42d5-4bd1-a324-3c868fbb5867
+a=msid:YMroQHXltXsOCg0rPArExIwqVSudKE6XlMGe 9b1aaa20-42d5-4bd1-a324-3c868fbb5867
+a=sendonly
+m=application 9 DTLS/SCTP 5000
+c=IN IP4 0.0.0.0
+a=setup:actpass
+a=mid:1
+a=sendrecv
+a=sctpmap:5000 webrtc-datachannel 1024
+a=ice-ufrag:NTHIWARKSsUDtTRG
+a=ice-pwd:otCrldAfPQbKbLmpoHsXnXwZMGgSJjqa
+"

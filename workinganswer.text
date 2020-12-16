@@ -1,0 +1,109 @@
+"v=0
+o=- 7836616758721241847 1608042982 IN IP4 0.0.0.0
+s=-
+t=0 0
+a=fingerprint:sha-256 86:6F:60:FE:D0:F9:95:87:E9:03:FE:AD:4B:25:C6:84:11:4E:CF:CD:33:97:75:D1:0C:A8:21:5C:86:C2:AE:42
+a=group:BUNDLE 0 1 2
+m=audio 9 UDP/TLS/RTP/SAVPF 111
+c=IN IP4 0.0.0.0
+a=setup:actpass
+a=mid:0
+a=ice-ufrag:mJQWxOSTDRhDIcVX
+a=ice-pwd:KHvaPRJFJxVxyIHAIDADracVjXNPYpqq
+a=rtcp-mux
+a=rtcp-rsize
+a=rtpmap:111 opus/48000/2
+a=fmtp:111 minptime=10;useinbandfec=1
+a=extmap:1 urn:ietf:params:rtp-hdrext:sdes:mid
+a=ssrc:1704577795 cname:dzsUGtw4yQX04sMWVRQwtZ4OacVwGNI13Moa
+a=ssrc:1704577795 msid:dzsUGtw4yQX04sMWVRQwtZ4OacVwGNI13Moa 58364c0f-5d80-4b4b-aebc-f83609b038f5
+a=ssrc:1704577795 mslabel:dzsUGtw4yQX04sMWVRQwtZ4OacVwGNI13Moa
+a=ssrc:1704577795 label:58364c0f-5d80-4b4b-aebc-f83609b038f5
+a=msid:dzsUGtw4yQX04sMWVRQwtZ4OacVwGNI13Moa 58364c0f-5d80-4b4b-aebc-f83609b038f5
+a=sendonly
+m=video 9 UDP/TLS/RTP/SAVPF 96 98 100 102 127 125 108 124 123
+c=IN IP4 0.0.0.0
+a=setup:actpass
+a=mid:1
+a=ice-ufrag:mJQWxOSTDRhDIcVX
+a=ice-pwd:KHvaPRJFJxVxyIHAIDADracVjXNPYpqq
+a=rtcp-mux
+a=rtcp-rsize
+a=rtpmap:96 VP8/90000
+a=rtcp-fb:96 ccm
+a=rtcp-fb:96 nack
+a=rtcp-fb:96 nack pli
+a=rtcp-fb:96 transport-cc
+a=rtcp-fb:96 goog-remb
+a=rtpmap:98 VP9/90000
+a=fmtp:98 profile-id=0
+a=rtcp-fb:98 ccm
+a=rtcp-fb:98 nack
+a=rtcp-fb:98 nack pli
+a=rtcp-fb:98 transport-cc
+a=rtcp-fb:98 goog-remb
+a=rtpmap:100 VP9/90000
+a=fmtp:100 profile-id=2
+a=rtcp-fb:100 ccm
+a=rtcp-fb:100 nack
+a=rtcp-fb:100 nack pli
+a=rtcp-fb:100 transport-cc
+a=rtcp-fb:100 goog-remb
+a=rtpmap:102 H264/90000
+a=fmtp:102 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42001f
+a=rtcp-fb:102 ccm
+a=rtcp-fb:102 nack
+a=rtcp-fb:102 nack pli
+a=rtcp-fb:102 transport-cc
+a=rtcp-fb:102 goog-remb
+a=rtpmap:127 H264/90000
+a=fmtp:127 level-asymmetry-allowed=1;packetization-mode=0;profile-level-id=42001f
+a=rtcp-fb:127 ccm
+a=rtcp-fb:127 nack
+a=rtcp-fb:127 nack pli
+a=rtcp-fb:127 transport-cc
+a=rtcp-fb:127 goog-remb
+a=rtpmap:125 H264/90000
+a=fmtp:125 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f
+a=rtcp-fb:125 ccm
+a=rtcp-fb:125 nack
+a=rtcp-fb:125 nack pli
+a=rtcp-fb:125 transport-cc
+a=rtcp-fb:125 goog-remb
+a=rtpmap:108 H264/90000
+a=fmtp:108 level-asymmetry-allowed=1;packetization-mode=0;profile-level-id=42e01f
+a=rtcp-fb:108 ccm
+a=rtcp-fb:108 nack
+a=rtcp-fb:108 nack pli
+a=rtcp-fb:108 transport-cc
+a=rtcp-fb:108 goog-remb
+a=rtpmap:124 H264/90000
+a=fmtp:124 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=4d0032
+a=rtcp-fb:124 ccm
+a=rtcp-fb:124 nack
+a=rtcp-fb:124 nack pli
+a=rtcp-fb:124 transport-cc
+a=rtcp-fb:124 goog-remb
+a=rtpmap:123 H264/90000
+a=fmtp:123 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=640032
+a=rtcp-fb:123 ccm
+a=rtcp-fb:123 nack
+a=rtcp-fb:123 nack pli
+a=rtcp-fb:123 transport-cc
+a=rtcp-fb:123 goog-remb
+a=extmap:1 urn:ietf:params:rtp-hdrext:sdes:mid
+a=ssrc:3103842923 cname:dzsUGtw4yQX04sMWVRQwtZ4OacVwGNI13Moa
+a=ssrc:3103842923 msid:dzsUGtw4yQX04sMWVRQwtZ4OacVwGNI13Moa 5c13d93e-98fb-4185-ade0-bb297ab63e33
+a=ssrc:3103842923 mslabel:dzsUGtw4yQX04sMWVRQwtZ4OacVwGNI13Moa
+a=ssrc:3103842923 label:5c13d93e-98fb-4185-ade0-bb297ab63e33
+a=msid:dzsUGtw4yQX04sMWVRQwtZ4OacVwGNI13Moa 5c13d93e-98fb-4185-ade0-bb297ab63e33
+a=sendonly
+m=application 9 DTLS/SCTP 5000
+c=IN IP4 0.0.0.0
+a=setup:actpass
+a=mid:2
+a=sendrecv
+a=sctpmap:5000 webrtc-datachannel 1024
+a=ice-ufrag:mJQWxOSTDRhDIcVX
+a=ice-pwd:KHvaPRJFJxVxyIHAIDADracVjXNPYpqq
+"
