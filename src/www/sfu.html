@@ -40,6 +40,8 @@ Logs<br />
     let pcPub = new RTCPeerConnection(config)
     let pcSub = new RTCPeerConnection(config)
     let myid;
+    let pubCan = [];
+    let subCan = [];
 
     socket.onmessage = function(event) {
       messageHandler(event);
@@ -78,6 +80,11 @@ Logs<br />
                 console.log(e)
             })
 
+            subCan.forEach((c) => pcSub.addIceCandidate(c).catch(function (e) {
+                    console.log("subCan push faile", e)
+            }))
+            subCan =[];
+
             const id = uuid()
             log(`Sending answer`)
             socket.send(JSON.stringify({
@@ -91,18 +98,26 @@ Logs<br />
     async function onTrickle(event) {
       console.log("trickle recieved!!!! ", event.data.candidate, "taget@@ ", event.data.target)
              // pcPub.addIceCandidate(event.data.candidate).catch(log);
-                if (event.data.target === 0) {
+             if (event.data.target === 0) {
+                if (pcPub.remoteDescription) {
                     console.log("set Can pub")
-                    pcPub.addIceCandidate(event.data.candidate).catch(e => {
-                        log("pub error", e)
-                    });
+                console.log("signal state of pub", pcPub.signalingState)
+                pcPub.addIceCandidate(event.data.candidate).catch(e => {
+                    log("pub error", e)
+                });
+                } else {
+                    pubCan.push(event.data.candidate);
                 }
+            }
 
-                if (event.data.target === 1) {
+            if (event.data.target === 1) {
+                if (pcSub.remoteDescription) {
                     console.log("set Can sub")
-                            pcSub.addIceCandidate(event.data.candidate).catch(e => {
-                                log("sub error", e)
-                            });
+                console.log("signal state of sub", pcSub.signalingState)
+                pcSub.addIceCandidate(event.data.candidate).catch(log);
+                } else {
+                    subCan.push(event.data.candidate);
+                }
             }
     }
 
@@ -126,20 +141,28 @@ Logs<br />
                     socket.send(JSON.stringify(message))
                     console.log("send offer")
 
-                    socket.addEventListener('message', (event) => {
+                    socket.addEventListener('message', async (event) => {
                         const resp = JSON.parse(event.data)
                         if (resp.id === id) {
                             log(`Got renegotiation answer`)
-                            pcSub.setRemoteDescription(resp.data).catch(function (e) {
+                            await pcSub.setRemoteDescription(resp.data).catch(function (e) {
                                 console.log(e)
                             });
+                            subCan.forEach((c) => pcSub.addIceCandidate(c).catch(function(e) {
+                                console.log("sub can got answer", e)
+                            }))
+                            subCan =[];
                         }
                     })
                 }
                 console.log("set remote ", event.data)
-                pcPub.setRemoteDescription(event.data).catch(function(e) {
+                await pcPub.setRemoteDescription(event.data).catch(function(e) {
                     console.log("error here ", e)
                 })
+                pubCan.forEach((c) => pcPub.addIceCandidate(c).catch(function (e) {
+                    console.log("pubcan error", e)
+                }))
+                pubCan =[];
             }
     }
 

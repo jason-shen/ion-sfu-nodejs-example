@@ -40,13 +40,12 @@ Logs<br />
     let pcPub = new RTCPeerConnection(config)
     let pcSub = new RTCPeerConnection(config)
     let id;
-    let peerConnectionOfferAnswerCriteria = {
-  offerToReceiveAudio: true,
-  offerToReceiveVideo: true,
-};
+    let pubCan = [];
+    let subCan = [];
+
     pcPub.ontrack = function ({track, streams}) {
         if (track.kind === 'video') {
-            log("got track");
+            log("got track pub");
             track.onunmute = function() {
                 let el = document.createElement(track.kind)
                 el.srcObject = streams[0]
@@ -82,7 +81,7 @@ Logs<br />
 
     pcPub.onicecandidate = function (event) {
         let candidate = event.candidate;
-        if (pcPub.signalingState === "stable") {
+         if (pcPub.signalingState === "stable") {
         if (candidate !== null) {
             let message = {
                 type: "trickle",
@@ -99,7 +98,7 @@ Logs<br />
 
     pcSub.onicecandidate = function (event) {
         let candidate = event.candidate;
-        if (pcPub.signalingState === "stable") {
+         if (pcSub.signalingState === "stable") {
         if (candidate !== null) {
             let message = {
                 type: "trickle",
@@ -109,7 +108,7 @@ Logs<br />
                 }
             }
             socket.send(JSON.stringify(message))
-            console.log("send trickle", message);
+           // console.log("send trickle", message);
         }
     }
 }
@@ -124,6 +123,10 @@ Logs<br />
             await pcSub.setRemoteDescription(resp.data).catch(function(e) {
                 console.log(e);
             })
+
+            subCan.forEach((c) => pcSub.addIceCandidate(c))
+            subCan =[];
+
             const answer = await pcSub.createAnswer().catch(function(e) {
                 console.log(e)
             })
@@ -144,17 +147,27 @@ Logs<br />
               // pcPub.addIceCandidate(resp.data.candidate).catch(log);
             //    if (resp.data.candidate !== null) {
                 if (resp.data.target === 0) {
-                console.log("set Can pub")
+                if (pcPub.remoteDescription) {
+                    console.log("set Can pub")
                 console.log("signal state of pub", pcPub.signalingState)
                 pcPub.addIceCandidate(resp.data.candidate).catch(e => {
                     log("pub error", e)
                 });
+                } else {
+                    console.log("stash pub can")
+                    pubCan.push(resp.data.candidate);
+                }
             }
 
             if (resp.data.target === 1) {
-                console.log("set Can sub")
+                if (pcSub.remoteDescription) {
+                    console.log("set Can sub")
                 console.log("signal state of sub", pcSub.signalingState)
                 pcSub.addIceCandidate(resp.data.candidate).catch(log);
+                } else {
+                    console.log("stash sub can")
+                    subCan.push(resp.data.candidate);
+                }
             }
         }
         //     pc.setRemoteDescription(resp.data).then(function() {
@@ -231,7 +244,9 @@ Logs<br />
                         consoel.log("response ", resp)
                         if (resp.id === id) {
                             log(`Got renegotiation answer`)
-                            pcSub.setRemoteDescription(resp.data).catch(function (e) {
+                            pcPub.setRemoteDescription(resp.data).then(function () {
+                            pubCan.forEach((c) => pcPub.addIceCandidate(c))
+                        }).catch(function (e) {
                                 console.log(e)
                             });
                         }
@@ -239,12 +254,41 @@ Logs<br />
                 }
                 // end
                 console.log("before error", resp.data)
-                pcPub.setRemoteDescription(resp.data).catch(function(e) {
+                await pcPub.setRemoteDescription(resp.data).catch(function(e) {
                     console.log("error here ", e)
                 })
+                pubCan.forEach((c) => pcPub.addIceCandidate(c))
             }
         })
     }
+
+    // async function subOffer() {
+    //     const offer = await pcSub.createOffer()
+    //                 await pcSub.setLocalDescription(offer)
+    //                 const id = uuid()
+    //                 let message = {
+    //                     type: "offer",
+    //                     data: {
+    //                         desc: offer,
+    //                         id
+    //                                         }
+    //                         }
+    //                 socket.send(JSON.stringify(message))
+    //                 console.log("send offer", message)
+
+    //                 socket.addEventListener('message', async (event) => {
+    //                     const resp = JSON.parse(event.data)
+    //                     console.log("response ", resp)
+    //                     if (resp.id === id) {
+    //                         log(`Got renegotiation answer`)
+    //                         await pcSub.setRemoteDescription(resp.data).catch(function (e) {
+    //                             console.log(e)
+    //                         });
+    //                         subCan.forEach((c) => pcSub.addIceCandidate(c))
+    //                         subCan =[];
+    //                     }
+    //                 })
+    // }
 
     let localStream
     let pid
